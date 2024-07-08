@@ -52,6 +52,10 @@ func DeleteTaskHandler(db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
-		json.NewEncoder(w).Encode(map[string]interface{}{"status": "success"})
+		//json.NewEncoder(w).Encode(map[string]interface{}{"status": "success"})
+
+		// Возвращаем пустой ответ, так как тесты ожидают пустой результат
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.Write([]byte(`{}`))
 	}
 }

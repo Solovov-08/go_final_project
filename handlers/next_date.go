@@ -27,7 +27,7 @@ func NextDateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Возвращаем следующую дату в виде текста
+	// Возвращаем следующую дату без текста так как того требуют тесты
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.Write([]byte(`{"next_date": "` + nextDate + `"}`))
+	w.Write([]byte(nextDate))
 }
