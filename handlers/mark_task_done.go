@@ -7,13 +7,11 @@ import (
 	"time"
 
 	"go_final_project/database"
-	"go_final_project/tasks"
-
-	"github.com/jmoiron/sqlx"
+	"go_final_project/nextdate"
 )
 
 // MarkTaskDoneHandler обрабатывает запросы на пометку задачи выполненной
-func MarkTaskDoneHandler(db *sqlx.DB) http.HandlerFunc {
+func MarkTaskDoneHandler(storage *database.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
@@ -25,9 +23,9 @@ func MarkTaskDoneHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		// Получаем задачу из базы данных по идентификатору
-		task, err := database.FetchTaskByID(db, taskID)
+		task, err := storage.GetTask(taskID)
 		if err != nil {
-			if err.Error() == "task not found" {
+			if err.Error() == "задача не найдена" {
 				http.Error(w, `{"error": "Задача не найдена"}`, http.StatusNotFound)
 			} else {
 				http.Error(w, `{"error": "Ошибка при получении задачи"}`, http.StatusInternalServerError)
@@ -37,7 +35,7 @@ func MarkTaskDoneHandler(db *sqlx.DB) http.HandlerFunc {
 
 		// Если задача не повторяющаяся, удаляем её из базы данных
 		if task.Repeat == "" {
-			err := database.RemoveTask(db, taskID)
+			err := storage.RemoveTask(taskID)
 			if err != nil {
 				http.Error(w, `{"error": "Ошибка при удалении задачи"}`, http.StatusInternalServerError)
 				return
@@ -45,7 +43,7 @@ func MarkTaskDoneHandler(db *sqlx.DB) http.HandlerFunc {
 		} else {
 			// Если задача повторяющаяся, обновляем её следующей датой выполнения
 			now := time.Now()
-			nextDate, err := tasks.CalculateNextDate(now, task.Date, task.Repeat)
+			nextDate, err := nextdate.CalculateNextDate(now, task.Date, task.Repeat)
 			if err != nil {
 				log.Printf("Ошибка вычисления следующей даты: %v", err)
 				http.Error(w, `{"error": "Ошибка вычисления следующей даты"}`, http.StatusInternalServerError)
@@ -54,7 +52,7 @@ func MarkTaskDoneHandler(db *sqlx.DB) http.HandlerFunc {
 
 			// Обновляем задачу в базе данных с новой датой выполнения
 			task.Date = nextDate
-			err = database.UpdateTask(db, task)
+			err = storage.UpdateTask(task)
 			if err != nil {
 				http.Error(w, `{"error": "Ошибка при обновлении задачи"}`, http.StatusInternalServerError)
 				return

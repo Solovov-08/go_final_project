@@ -1,8 +1,6 @@
-package tasks
+package nextdate
 
 import (
-	"go_final_project/model"
-
 	"errors"
 	"fmt"
 	"strconv"
@@ -68,35 +66,4 @@ func CalculateNextDate(now time.Time, dateStr string, repeat string) (string, er
 	}
 
 	return resultDate.Format(FormatDate), nil
-}
-
-// ValidateTask выполняет валидацию задачи на основе определенных правил и возвращает ошибку, если задача не соответствует этим правилам.
-func ValidateTask(task *model.Task) error {
-	if task.Title == "" {
-		return errors.New("не указан заголовок задачи")
-	}
-
-	now := time.Now()
-	if task.Date == "" {
-		task.Date = now.Format(FormatDate)
-	} else {
-		date, err := time.Parse(FormatDate, task.Date)
-		if err != nil {
-			return errors.New("дата представлена в неправильном формате")
-		}
-
-		if date.Before(now) {
-			if task.Repeat == "" {
-				task.Date = now.Format(FormatDate)
-			} else {
-				nextDate, err := CalculateNextDate(now, task.Date, task.Repeat)
-				if err != nil {
-					return errors.New("ошибка вычисления следующей даты")
-				}
-				task.Date = nextDate
-			}
-		}
-	}
-
-	return nil
 }

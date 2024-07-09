@@ -3,18 +3,15 @@ package handlers
 import (
 	"encoding/json"
 	"go_final_project/database"
-	"go_final_project/model"
-	"go_final_project/tasks"
+	"go_final_project/task"
 	"log"
 	"net/http"
-
-	"github.com/jmoiron/sqlx"
 )
 
 // UpdateTaskHandler обрабатывает запросы на обновление задачи
-func UpdateTaskHandler(db *sqlx.DB) http.HandlerFunc {
+func UpdateTaskHandler(storage *database.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var updatedTask model.Task
+		var updatedTask task.Task
 		if err := json.NewDecoder(r.Body).Decode(&updatedTask); err != nil {
 			log.Printf("Ошибка декодирования JSON: %v", err)
 			http.Error(w, `{"error": "Некорректный формат данных"}`, http.StatusBadRequest)
@@ -27,13 +24,13 @@ func UpdateTaskHandler(db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
-		if err := tasks.ValidateTask(&updatedTask); err != nil {
+		if err := task.Validate(&updatedTask); err != nil {
 			http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusBadRequest)
 			return
 		}
 
-		if err := database.UpdateTask(db, updatedTask); err != nil {
-			if err.Error() == "task not found" {
+		if err := storage.UpdateTask(updatedTask); err != nil {
+			if err.Error() == "задача не найдена" {
 				http.Error(w, `{"error": "Задача не найдена"}`, http.StatusNotFound)
 			} else {
 				http.Error(w, `{"error": "Внутренняя ошибка сервера"}`, http.StatusInternalServerError)

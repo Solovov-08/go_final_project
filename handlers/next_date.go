@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"go_final_project/tasks"
+	"go_final_project/nextdate"
 	"net/http"
 	"time"
 )
@@ -14,14 +14,14 @@ func NextDateHandler(w http.ResponseWriter, r *http.Request) {
 	repeatRule := r.FormValue("repeat")
 
 	// Парсим текущее время в формате, указанном в tasks.FormatDate
-	currentDate, err := time.Parse(tasks.FormatDate, currentDateStr)
+	currentDate, err := time.Parse(nextdate.FormatDate, currentDateStr)
 	if err != nil {
 		http.Error(w, `{"error": "Неверный формат параметра now"}`, http.StatusBadRequest)
 		return
 	}
 
 	// Вычисляем следующую дату на основе повторения
-	nextDate, err := tasks.CalculateNextDate(currentDate, targetDateStr, repeatRule)
+	nextDate, err := nextdate.CalculateNextDate(currentDate, targetDateStr, repeatRule)
 	if err != nil {
 		http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusBadRequest)
 		return
